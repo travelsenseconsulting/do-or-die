@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output (analytics.bundle.js is committed as it's needed for the site)
+# Keep analytics.bundle.js in the repo
+
+# Temporary files
+analytics.js
+New folder/analytics.js
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

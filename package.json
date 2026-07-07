@@ -1,0 +1,27 @@
+{
+  "name": "galatea-animal-sanctuary",
+  "version": "1.0.0",
+  "description": "Galatea's Animal Sanctuary website with Vercel Web Analytics",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild analytics.js --bundle --format=iife --outfile='New folder/analytics.bundle.js'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/travelsenseconsulting/do-or-die.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/travelsenseconsulting/do-or-die/issues"
+  },
+  "homepage": "https://github.com/travelsenseconsulting/do-or-die#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}
