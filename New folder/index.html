@@ -113,8 +113,15 @@ body{font-family:'Nunito',sans-serif;background:#faf7f2;color:#2d2a22;}
 .cal-day.past{opacity:.35;cursor:default;}
 .cal-day.available:hover{background:#edf5ec;border-color:#3a7a52;}
 .cal-day.booked{background:#fdecea;border-color:#f5b8b8;cursor:default;}
-.cal-day.selected{background:#3a7a52;border-color:#2d6644;}
-.cal-day.selected .day-num{color:#fff;}
+.cal-day.check-in{background:#2d6644;border-color:#1a3d28;}
+.cal-day.check-in .day-num{color:#fff;}
+.cal-day.check-in .day-status{color:#a0d4b0;}
+.cal-day.check-out{background:#2d6644;border-color:#1a3d28;}
+.cal-day.check-out .day-num{color:#fff;}
+.cal-day.check-out .day-status{color:#a0d4b0;}
+.cal-day.in-range{background:#edf5ec;border-color:#8fc89a;}
+.cal-day.in-range .day-num{color:#1a3d28;}
+.cal-sel-hint{font-size:12px;color:#3a7a52;font-weight:600;margin-top:.7rem;min-height:1.4em;text-align:center;}
 .day-num{font-size:13px;font-weight:700;color:#2d2a22;line-height:1;}
 .day-status{font-size:9px;font-weight:600;letter-spacing:.3px;margin-top:3px;}
 .available .day-status{color:#3a7a52;}
@@ -512,14 +519,15 @@ body{font-family:'Nunito',sans-serif;background:#faf7f2;color:#2d2a22;}
       <div class="leg-item"><div class="leg-dot leg-available"></div> Available</div>
       <div class="leg-item"><div class="leg-dot leg-booked"></div> Booked</div>
     </div>
+    <div class="cal-sel-hint" id="calHint">Click a date to select your check-in</div>
 
 
 
     <div class="booking-form" id="bookingForm">
       <div class="booking-form-title">Request a booking</div>
       <div class="form-row">
-        <div class="form-field"><label>CHECK-IN</label><input type="date" id="fCheckIn" readonly></div>
-        <div class="form-field"><label>CHECK-OUT</label><input type="date" id="fCheckOut"></div>
+        <div class="form-field"><label>CHECK-IN</label><input type="text" id="fCheckIn" readonly placeholder="Select on calendar above" style="background:#f5f5f0;cursor:default;"></div>
+        <div class="form-field"><label>CHECK-OUT</label><input type="text" id="fCheckOut" readonly placeholder="Select on calendar above" style="background:#f5f5f0;cursor:default;"></div>
       </div>
       <div class="form-row">
         <div class="form-field"><label>YOUR NAME</label><input type="text" id="fName" placeholder="Full name"></div>
@@ -569,7 +577,7 @@ function openLightbox(imgId){const src=document.getElementById(imgId).src;docume
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 
 let bookedDates={thetis:[],erato:[]};
-let currentUnit='thetis',viewYear,viewMonth,selectedCheckIn=null;
+let currentUnit='thetis',viewYear,viewMonth,selectedCheckIn=null,selectedCheckOut=null;
 
 fetch('https://script.google.com/macros/s/AKfycbxUmPJfiZIJdJRuubt4PP1gObXhCWqZMzP3LlIzwjWLYiqyNaSysZpDHAst2W2Weppd/exec')
   .then(r=>r.json())
@@ -577,9 +585,27 @@ fetch('https://script.google.com/macros/s/AKfycbxUmPJfiZIJdJRuubt4PP1gObXhCWqZMz
   .catch(()=>{});
 
 function openBooking(){const now=new Date();viewYear=now.getFullYear();viewMonth=now.getMonth();document.getElementById('bookingModal').classList.add('open');renderCalendar();}
-function closeBooking(){document.getElementById('bookingModal').classList.remove('open');selectedCheckIn=null;}
-function switchUnit(unit,btn){currentUnit=unit;document.querySelectorAll('.unit-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');selectedCheckIn=null;renderCalendar();}
+function closeBooking(){document.getElementById('bookingModal').classList.remove('open');selectedCheckIn=null;selectedCheckOut=null;}
+function switchUnit(unit,btn){currentUnit=unit;document.querySelectorAll('.unit-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');selectedCheckIn=null;selectedCheckOut=null;document.getElementById('fCheckIn').value='';document.getElementById('fCheckOut').value='';updateHint();renderCalendar();}
 function changeMonth(dir){viewMonth+=dir;if(viewMonth>11){viewMonth=0;viewYear++;}if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();}
+
+function formatDisplay(ds){const[y,m,d]=ds.split('-');const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return d+' '+months[parseInt(m)-1]+' '+y;}
+
+function rangeHasBookedDate(from,to){
+  const booked=bookedDates[currentUnit]||[];
+  let cur=new Date(from);const end=new Date(to);
+  cur.setDate(cur.getDate()+1);
+  while(cur<end){const ds=cur.toISOString().split('T')[0];if(booked.includes(ds))return true;cur.setDate(cur.getDate()+1);}
+  return false;
+}
+
+function updateHint(){
+  const hint=document.getElementById('calHint');
+  if(!selectedCheckIn)hint.textContent='Click a date to select your check-in';
+  else if(!selectedCheckOut)hint.textContent='Check-in: '+formatDisplay(selectedCheckIn)+' — now click your check-out date';
+  else hint.textContent='Check-in: '+formatDisplay(selectedCheckIn)+' → Check-out: '+formatDisplay(selectedCheckOut);
+}
+
 function renderCalendar(){
   const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
   document.getElementById('calMonth').textContent=months[viewMonth]+' '+viewYear;
@@ -595,17 +621,51 @@ function renderCalendar(){
     const el=document.createElement('div');
     const isPast=date<today,isBooked=bookedDates[currentUnit].includes(ds);
     el.className='cal-day'+(isPast?' past':isBooked?' booked':' available');
-    if(selectedCheckIn===ds)el.classList.add('selected');
+    if(ds===selectedCheckIn)el.classList.add('check-in');
+    if(ds===selectedCheckOut)el.classList.add('check-out');
+    if(selectedCheckIn&&selectedCheckOut&&ds>selectedCheckIn&&ds<selectedCheckOut)el.classList.add('in-range');
     const num=document.createElement('div');num.className='day-num';num.textContent=d;el.appendChild(num);
-    if(!isPast){const s=document.createElement('div');s.className='day-status';s.textContent=isBooked?'Booked':'Free';el.appendChild(s);}
+    if(!isPast){const s=document.createElement('div');s.className='day-status';
+      if(ds===selectedCheckIn)s.textContent='Check-in';
+      else if(ds===selectedCheckOut)s.textContent='Check-out';
+      else s.textContent=isBooked?'Booked':'Free';
+      el.appendChild(s);}
     if(!isPast&&!isBooked)el.onclick=()=>selectDate(ds);
     grid.appendChild(el);
   }
+  updateHint();
 }
-function selectDate(ds){selectedCheckIn=ds;document.getElementById('fCheckIn').value=ds;document.getElementById('fCheckOut').value='';renderCalendar();document.getElementById('bookingForm').scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+function selectDate(ds){
+  if(!selectedCheckIn||( selectedCheckIn&&selectedCheckOut)){
+    // Start fresh selection
+    selectedCheckIn=ds;selectedCheckOut=null;
+    document.getElementById('fCheckIn').value=formatDisplay(ds);
+    document.getElementById('fCheckOut').value='';
+  } else {
+    // Second click — set check-out
+    if(ds<=selectedCheckIn){
+      // Clicked before check-in — restart
+      selectedCheckIn=ds;selectedCheckOut=null;
+      document.getElementById('fCheckIn').value=formatDisplay(ds);
+      document.getElementById('fCheckOut').value='';
+    } else if(rangeHasBookedDate(selectedCheckIn,ds)){
+      alert('Your selected range includes booked dates. Please choose different dates.');
+      selectedCheckIn=null;selectedCheckOut=null;
+      document.getElementById('fCheckIn').value='';
+      document.getElementById('fCheckOut').value='';
+    } else {
+      selectedCheckOut=ds;
+      document.getElementById('fCheckOut').value=formatDisplay(ds);
+      document.getElementById('bookingForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+  }
+  renderCalendar();
+}
+
 function submitBooking(){
   const name=document.getElementById('fName').value.trim(),checkIn=document.getElementById('fCheckIn').value,checkOut=document.getElementById('fCheckOut').value;
-  if(!name||!checkIn||!checkOut){alert('Please fill in your name and both check-in and check-out dates.');return;}
+  if(!name||!checkIn||!checkOut){alert('Please select your dates on the calendar and fill in your name.');return;}
   const unit=currentUnit==='thetis'?'Thetis':'Erato';
   const text=encodeURIComponent('Booking Request — Animal Defenders for Life, South Pelion\n\nUnit: '+unit+'\nCheck-in: '+checkIn+'\nCheck-out: '+checkOut+'\nGuests: '+(document.getElementById('fGuests').value||'—')+'\nName: '+name+'\nEmail: '+(document.getElementById('fEmail').value||'—')+'\nPhone: '+(document.getElementById('fPhone').value||'—')+'\n'+(document.getElementById('fMessage').value?'Message: '+document.getElementById('fMessage').value:''));
   window.open('https://wa.me/306971904864?text='+text,'_blank');
