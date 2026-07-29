@@ -494,7 +494,6 @@ body{font-family:'Nunito',sans-serif;background:#faf7f2;color:#2d2a22;}
     <div class="modal-title">Check <em>availability</em></div>
     <div class="modal-sub">Select a unit and your dates, then send your request directly to Galatea via WhatsApp</div>
     <div style="background:#edf5ec;border:1.5px solid #3a7a52;border-radius:12px;padding:1rem 1.3rem;margin-bottom:1.4rem;font-size:14px;line-height:1.75;color:#1a3d28;">
-      The booking request form will be live soon, but in the meantime please contact Galatea via the WhatsApp link or call, for further information or to make a booking.<br><br>
       <strong>Rate:</strong> Summer rate for both units (June to August) is €100 for two persons + €15 per additional guest. Enquire for rates during other periods.<br>
       <strong>Cleaning:</strong> €60 per stay.<br>
       <strong>Availability:</strong> Both units are available year round.
@@ -569,8 +568,13 @@ body{font-family:'Nunito',sans-serif;background:#faf7f2;color:#2d2a22;}
 function openLightbox(imgId){const src=document.getElementById(imgId).src;document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('open');}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 
-const bookedDates={thetis:[],erato:[]};
+let bookedDates={thetis:[],erato:[]};
 let currentUnit='thetis',viewYear,viewMonth,selectedCheckIn=null;
+
+fetch('https://script.google.com/macros/s/AKfycbxUmPJfiZIJdJRuubt4PP1gObXhCWqZMzP3LlIzwjWLYiqyNaSysZpDHAst2W2Weppd/exec')
+  .then(r=>r.json())
+  .then(d=>{bookedDates=d;renderCalendar();})
+  .catch(()=>{});
 
 function openBooking(){const now=new Date();viewYear=now.getFullYear();viewMonth=now.getMonth();document.getElementById('bookingModal').classList.add('open');renderCalendar();}
 function closeBooking(){document.getElementById('bookingModal').classList.remove('open');selectedCheckIn=null;}
